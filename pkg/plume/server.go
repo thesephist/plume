@@ -61,6 +61,17 @@ func (srv *Server) Connect(w http.ResponseWriter, r *http.Request) {
 	}
 	defer conn.Close()
 
+	// keep-alive ping-pong messages
+	go func() {
+		for {
+			time.Sleep(time.Minute)
+
+			if err := conn.WriteMessage(websocket.PingMessage, nil); err != nil {
+				return
+			}
+		}
+	}()
+
 	var client *Client
 	for {
 		var msg Message
