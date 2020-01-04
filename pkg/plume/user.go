@@ -25,7 +25,7 @@ func (u User) SendAuthEmail(token string) {
 	from := "Plume Chat <hi@plume.chat>"
 	subject := "Your Plume login code"
 	body := fmt.Sprintf(
-		"Hi %s! Your login code to plume.chat is \"%s\".",
+		"Hi @%s! Your login code to Plume.chat is \"%s\".",
 		u.Name,
 		token,
 	)

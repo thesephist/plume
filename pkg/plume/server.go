@@ -64,7 +64,8 @@ func (srv *Server) Connect(w http.ResponseWriter, r *http.Request) {
 	// keep-alive ping-pong messages
 	go func() {
 		for {
-			time.Sleep(time.Minute)
+			// 50 seconds, since the HTTP timeout is 60 on this server
+			time.Sleep(50 * time.Second)
 
 			if err := conn.WriteMessage(websocket.PingMessage, nil); err != nil {
 				return
@@ -172,8 +173,8 @@ func StartServer() {
 	srv := &http.Server{
 		Handler:      r,
 		Addr:         "127.0.0.1:4884",
-		WriteTimeout: 15 * time.Second,
-		ReadTimeout:  15 * time.Second,
+		WriteTimeout: 60 * time.Second,
+		ReadTimeout:  60 * time.Second,
 	}
 	plumeSrv := Server{
 		Room:       NewRoom(),
