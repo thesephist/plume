@@ -58,6 +58,13 @@ form {
     align-items: flex-end;
 }
 
+.checkSpamMessage {
+    font-style: italic;
+    margin-top: 0;
+    margin-bottom: 24px;
+    color: #777;
+}
+
 label {
     margin-left: 4px;
 }

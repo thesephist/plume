@@ -7,7 +7,7 @@ import (
 )
 
 func main() {
-	fmt.Println("Starting Plume server...\n")
+	fmt.Println("Starting Plume server...")
 
 	plume.StartServer()
 }

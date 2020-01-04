@@ -17,7 +17,7 @@
         </div>
 
         <div class="flexRow left">
-            <label for="login--email">Email</label>
+            <label for="login--email">Email (we'll send you a login code here)</label>
             <div class="inputWrapper fixed block">
                 <input type="email" name="email" id="login--email" placeholder="me@example.com" />
             </div>
@@ -25,13 +25,14 @@
 
         <div class="flexRow right">
             <div class="submitWrapper block">
-                <input type="submit" value="Submit" />
+                <input type="submit" value="Start" />
             </div>
         </div>
     </form>
 
     <form action="POST" id="verifyForm" class="plumeForm">
         <h1>Verify your email ⌨️</h1>
+        <p class="checkSpamMessage">Be sure to check spam.</p>
 
         <div class="flexRow left">
             <label for="verify--token">Login code</label>
@@ -58,7 +59,7 @@
         <div class="authorBox">
             <label for="message--text">Message</label>
             <div class="inputWrapper fixed block authorBoxInput">
-                <input type="text" name="text" id="message--text" placeholder="say something..." />
+                <input type="text" name="text" id="message--text" placeholder="Say something..." />
             </div>
             <div class="submitWrapper block">
                 <input type="submit" value="Send" />
