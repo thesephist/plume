@@ -13,6 +13,7 @@ func (cl *Client) Send(text string) error {
 	}
 
 	cl.Room.Broadcast(Message{
+		Type: MsgText,
 		User: cl.User,
 		Text: text,
 	})

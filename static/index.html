@@ -25,6 +25,23 @@
 
         <div class="flexRow right">
             <div class="submitWrapper block">
+                <input type="submit" value="Submit" />
+            </div>
+        </div>
+    </form>
+
+    <form action="POST" id="verifyForm" class="plumeForm">
+        <h1>Verify Email</h1>
+
+        <div class="flexRow left">
+            <label for="verify--token">Token</label>
+            <div class="inputWrapper fixed block">
+                <input type="text" name="token" id="verify-token" placeholder="000000"/>
+            </div>
+        </div>
+
+        <div class="flexRow right">
+            <div class="submitWrapper block">
                 <input type="submit" value="Enter" />
             </div>
         </div>

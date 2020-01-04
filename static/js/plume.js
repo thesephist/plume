@@ -2,11 +2,18 @@ const $ = document.querySelector.bind(document);
 const $$ = document.querySelectorAll.bind(document);
 
 const enterForm = $('#enterForm');
+const verifyForm = $('#verifyForm');
 const messageForm = $('#messageForm');
 
 const TYPE = {
     Hello: 0,
     Text: 1,
+
+    Auth: 2,
+    AuthAck: 3,
+    AuthRst: 4,
+
+    MayNotEnter: 5,
 }
 
 function show(el) {
@@ -23,6 +30,13 @@ function scrollToEnd() {
 }
 
 function logMessage(user, text) {
+    const messageList = $('.messageList');
+    
+    // if there are too may messages in the log (>500), remove one
+    if (messageList.childNodes.length > 500) {
+        messageList.removeChild(messageList.childNodes[0]);
+    }
+
     const item = document.createElement('li');
     item.classList.add('messageItem');
 
@@ -30,13 +44,13 @@ function logMessage(user, text) {
     userSpan.classList.add('user');
     userSpan.textContent = `@${user}:`;
     userSpan.style.color = colorizeString(user);
-    item.appendChild(userSpan);
-
-    item.appendChild(document.createTextNode(' '));
 
     const textSpan = document.createElement('span');
     textSpan.classList.add('text');
     textSpan.textContent = text;
+
+    item.appendChild(userSpan);
+    item.appendChild(document.createTextNode(' '));
     item.appendChild(textSpan);
 
     $('.messageList').appendChild(item);
@@ -45,7 +59,7 @@ function logMessage(user, text) {
 
 let conn = null;
 
-function connect(name, email, cb) {
+function connect(name, email) {
     conn = new WebSocket(`ws://${window.location.host}/connect`);
     conn.addEventListener('open', evt => {
         conn.send(JSON.stringify({
@@ -53,15 +67,63 @@ function connect(name, email, cb) {
             text: `${name}\n${email}`,
         }))
 
-        if (cb) cb();
+        hide(enterForm);
+        show(verifyForm);
     });
     conn.addEventListener('message', evt => {
         const message = JSON.parse(evt.data);
-        logMessage(message.user.name, message.text);
+
+        if (window.__debug__) {
+            console.info(message);
+        }
+
+        switch (message.type) {
+            case TYPE.Hello:
+                break;
+            case TYPE.Text:
+                logMessage(message.user.name, message.text);
+                break;
+            case TYPE.Auth:
+                break;
+            case TYPE.AuthAck:
+                hide(verifyForm);
+                show(messageForm);
+                messageForm.querySelector('[name="text"]').focus();
+                break;
+            case TYPE.AuthRst:
+                window.alert('Verification failed: incorrect token');
+                break;
+            case TYPE.MayNotEnter:
+                show(enterForm);
+                hide(verifyForm);
+                enterForm.querySelector('input[name="name"]').focus();
+                // we double-rAF here to make sure the previous frame (hiding
+                // the verification form) paints on screen. Kind of a cheap hack but
+                // the frontend isn't really important to me in this app.
+                requestAnimationFrame(() => {
+                    requestAnimationFrame(() => {
+                        window.alert('Another user is already using that username. Try a different one.');
+                    });
+                });
+                break;
+            default:
+                console.error('Unknown message type:', evt.data);
+        }
     });
     conn.addEventListener('error', evt => {
         console.log('WebSocket error:', evt);
     });
+}
+
+function verify(token) {
+    if (conn === null) {
+        return;
+    }
+
+    conn.send(JSON.stringify({
+        type: TYPE.Auth,
+        text: token,
+    }));
 }
 
 function send(text) {
@@ -104,12 +166,19 @@ enterForm.addEventListener('submit', evt => {
         return
     }
 
-    connect(name, email, () => {
-        hide(enterForm);
-        show(messageForm);
-        messageForm.querySelector('[name="text"]').focus();
-    });
+    connect(name, email);
 });
+
+verifyForm.addEventListener('submit', evt => {
+    evt.preventDefault();
+
+    const token = verifyForm.querySelector('[name="token"]').value;
+    if (!token.trim()) {
+        return
+    }
+
+    verify(token);
+})
 
 messageForm.addEventListener('submit', evt => {
     evt.preventDefault();
@@ -125,4 +194,5 @@ messageForm.addEventListener('submit', evt => {
     textInput.value = '';
 });
 
+hide(verifyForm);
 hide(messageForm);

@@ -1,13 +1,16 @@
 package plume
 
 type Room struct {
-	Sender          chan<- Message
+	Sender chan<- Message
+	// map of usernames to emails
+	verifiedNames   map[string]string
 	clientReceivers map[*Client]chan Message
 }
 
 func NewRoom() *Room {
 	return &Room{
 		Sender:          make(chan Message),
+		verifiedNames:   make(map[string]string),
 		clientReceivers: make(map[*Client]chan Message),
 	}
 }
@@ -20,10 +23,23 @@ func (rm *Room) Enter(u User) *Client {
 		Receiver: receiver,
 	}
 
+	rm.verifiedNames[u.Name] = u.Email
 	rm.clientReceivers[&client] = receiver
 	go client.StartListening()
 
 	return &client
+}
+
+// CanEnter reports whether a user should be allowed in a room.
+// A user may not enter a room if another user with a different email
+// but a matching username is already inside.
+func (rm *Room) CanEnter(u User) bool {
+	existingEmail, prs := rm.verifiedNames[u.Name]
+	if prs {
+		return u.Email == existingEmail
+	} else {
+		return true
+	}
 }
 
 func (rm *Room) Broadcast(msg Message) {

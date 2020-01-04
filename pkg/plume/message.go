@@ -4,6 +4,12 @@ const (
 	MsgHello = iota
 	MsgText
 
+	MsgAuth
+	MsgAuthAck
+	MsgAuthRst
+
+	MsgMayNotEnter
+
 	// In the future, we can support things like presence
 	// by using additioal codes liek MsgTypingStart/Stop
 )

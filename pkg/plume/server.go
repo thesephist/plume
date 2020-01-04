@@ -1,3 +1,4 @@
+// Package Plume provides a tiny WebSocket-based chat server
 package plume
 
 import (
@@ -8,9 +9,12 @@ import (
 	"strings"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/gorilla/mux"
 	"github.com/gorilla/websocket"
 )
+
+var Environment = os.Getenv("ENV")
 
 var upgrader = websocket.Upgrader{
 	ReadBufferSize:  1024,
@@ -18,10 +22,32 @@ var upgrader = websocket.Upgrader{
 }
 
 type Server struct {
-	Rooms []*Room
+	Room       *Room
+	loginCodes map[string]User
 }
 
-func (srv *Server) handleUpgrade(w http.ResponseWriter, r *http.Request) {
+func (srv *Server) GenerateLoginCode(u User) string {
+	// XXX: panics if uuid gen fails
+	// take the first 6 bytes of uuid as token
+	token := uuid.New().String()[0:6]
+	srv.loginCodes[token] = u
+
+	go func() {
+		// valid for 10 minutes
+		time.Sleep(10 * time.Minute)
+
+		delete(srv.loginCodes, token)
+	}()
+
+	return token
+}
+
+func (srv *Server) AuthUser(token string) (User, bool) {
+	user, prs := srv.loginCodes[token]
+	return user, prs
+}
+
+func (srv *Server) Connect(w http.ResponseWriter, r *http.Request) {
 	conn, err := upgrader.Upgrade(w, r, nil)
 	defer conn.Close()
 
@@ -57,13 +83,36 @@ func (srv *Server) handleUpgrade(w http.ResponseWriter, r *http.Request) {
 				Name:  textParts[0],
 				Email: textParts[1],
 			}
-			client = srv.Rooms[0].Enter(u)
+			if srv.Room.CanEnter(u) {
+				u.SendAuthEmail(srv.GenerateLoginCode(u))
+			} else {
+				conn.WriteJSON(Message{
+					Type: MsgMayNotEnter,
+					User: u,
+				})
+			}
+		case MsgAuth:
+			token := msg.Text
+			u, prs := srv.AuthUser(token)
+			if !prs {
+				conn.WriteJSON(Message{
+					Type: MsgAuthRst,
+					User: u,
+				})
+				break
+			}
 
+			client = srv.Room.Enter(u)
 			client.OnMessage = func(msg Message) {
 				conn.WriteJSON(msg)
 			}
 
-			log.Printf("User @%s entered", u.Name)
+			conn.WriteJSON(Message{
+				Type: MsgAuthAck,
+				User: u,
+			})
+
+			log.Printf("@%s entered with email %s", u.Name, u.Email)
 			client.Send("entered")
 		case MsgText:
 			if client == nil {
@@ -99,16 +148,14 @@ func StartServer() {
 		ReadTimeout:  15 * time.Second,
 	}
 	plumeSrv := Server{
-		Rooms: []*Room{},
+		Room:       NewRoom(),
+		loginCodes: make(map[string]User),
 	}
-
-	// For now, have one room
-	plumeSrv.Rooms = append(plumeSrv.Rooms, NewRoom())
 
 	r.HandleFunc("/", handleHome)
 	r.PathPrefix("/static/").Handler(http.StripPrefix("/static/", http.FileServer(http.Dir("./static"))))
 	r.HandleFunc("/connect", func(w http.ResponseWriter, r *http.Request) {
-		plumeSrv.handleUpgrade(w, r)
+		plumeSrv.Connect(w, r)
 	})
 
 	log.Fatal(srv.ListenAndServe())

@@ -57,7 +57,7 @@ label[for="message--text"] {
 
 input[type="submit"] {
     -webkit-appearance: none;
-
+    cursor: pointer;
     background: var(--block-accent-color);
     color: var(--block-background-color);
     border: 2px solid var(--block-accent-color);
