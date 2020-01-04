@@ -5,7 +5,7 @@ After=network.target
 
 [Service]
 Type=simple
-User=plume
+User=plume-user
 LimitNOFILE=256
 Environment="ENV=production"
 Environment="MAILGUN_APIKEY=KEY"

@@ -27,7 +27,7 @@ func (u User) SendAuthEmail(token string) {
 	body := fmt.Sprintf(
 		"Hi %s! Your login code to plume.chat is \"%s\".",
 		u.Name,
-		u.Email,
+		token,
 	)
 
 	if Environment != "production" {
