@@ -60,7 +60,11 @@ function logMessage(user, text) {
 let conn = null;
 
 function connect(name, email) {
-    conn = new WebSocket(`ws://${window.location.host}/connect`);
+    if (window.location.protocol === 'https:') {
+        conn = new WebSocket(`wss://${window.location.host}/connect`);
+    } else {
+        conn = new WebSocket(`ws://${window.location.host}/connect`);
+    }
     conn.addEventListener('open', evt => {
         conn.send(JSON.stringify({
             type: TYPE.Hello,
