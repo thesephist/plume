@@ -19,6 +19,10 @@ var Environment = os.Getenv("ENV")
 var upgrader = websocket.Upgrader{
 	ReadBufferSize:  1024,
 	WriteBufferSize: 1024,
+	CheckOrigin: func(r *http.Request) bool {
+		origin := r.Header.Get("Origin")
+		return origin == "https://plume.chat" || origin == "http://plume.chat"
+	},
 }
 
 type Server struct {
@@ -49,12 +53,11 @@ func (srv *Server) AuthUser(token string) (User, bool) {
 
 func (srv *Server) Connect(w http.ResponseWriter, r *http.Request) {
 	conn, err := upgrader.Upgrade(w, r, nil)
-	defer conn.Close()
-
 	if err != nil {
 		log.Println(err)
 		return
 	}
+	defer conn.Close()
 
 	var client *Client
 	for {
