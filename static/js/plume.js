@@ -98,10 +98,8 @@ function connect(name, email) {
                 // breaks the WebSocket session and effectively logs
                 // the user out, we ask for confirmation here.
                 window.addEventListener('beforeunload', evt => {
-                    if (noteChanged) {
-                        evt.preventDefault();
-                        evt.returnValue = '';
-                    }
+                    evt.preventDefault();
+                    evt.returnValue = '';
                 });
                 break;
             case TYPE.AuthRst:
