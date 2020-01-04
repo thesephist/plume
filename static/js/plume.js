@@ -26,7 +26,7 @@ function hide(el) {
 
 function scrollToEnd() {
     const container = $('.messageList');
-    container.scrollTop = container.getBoundingClientRect().height;
+    container.scrollTop = container.scrollHeight;
 }
 
 function logMessage(user, text) {
