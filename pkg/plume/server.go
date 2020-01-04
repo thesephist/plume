@@ -2,6 +2,7 @@
 package plume
 
 import (
+	"fmt"
 	"io"
 	"log"
 	"net/http"
@@ -21,19 +22,20 @@ var upgrader = websocket.Upgrader{
 	WriteBufferSize: 1024,
 	CheckOrigin: func(r *http.Request) bool {
 		origin := r.Header.Get("Origin")
-		return origin == "https://plume.chat" || origin == "http://plume.chat"
+		return origin == "https://plume.chat" || origin == "http://localhost:4884"
 	},
 }
 
 type Server struct {
 	Room       *Room
+	BotClient  *Client
 	loginCodes map[string]User
 }
 
 func (srv *Server) GenerateLoginCode(u User) string {
 	// XXX: panics if uuid gen fails
 	// take the first 6 bytes of uuid as token
-	token := uuid.New().String()[0:6]
+	token := strings.ToUpper(uuid.New().String()[0:6])
 	srv.loginCodes[token] = u
 
 	go func() {
@@ -47,7 +49,7 @@ func (srv *Server) GenerateLoginCode(u User) string {
 }
 
 func (srv *Server) AuthUser(token string) (User, bool) {
-	user, prs := srv.loginCodes[token]
+	user, prs := srv.loginCodes[strings.ToUpper(token)]
 	return user, prs
 }
 
@@ -68,7 +70,7 @@ func (srv *Server) Connect(w http.ResponseWriter, r *http.Request) {
 			log.Printf("error: %v", err)
 
 			if client != nil {
-				client.Send("left")
+				client.Send("left chat")
 			}
 
 			break
@@ -116,7 +118,19 @@ func (srv *Server) Connect(w http.ResponseWriter, r *http.Request) {
 			})
 
 			log.Printf("@%s entered with email %s", u.Name, u.Email)
-			client.Send("entered")
+
+			conn.WriteJSON(Message{
+				Type: MsgText,
+				User: srv.BotClient.User,
+				Text: fmt.Sprintf("Hi @%s! Welcome to Plume.chat. You can read more about this project at github.com/thesephist/plume.", u.Name),
+			})
+			conn.WriteJSON(Message{
+				Type: MsgText,
+				User: srv.BotClient.User,
+				Text: fmt.Sprintf("Please be kind in the chat, and remember that your email (%s) is tied to what you say here. Happy chatting!", u.Email),
+			})
+
+			client.Send("entered chat")
 		case MsgText:
 			if client == nil {
 				break
@@ -155,11 +169,19 @@ func StartServer() {
 		loginCodes: make(map[string]User),
 	}
 
+	// Every room gets a bot automatically
+	botUser := User{
+		Name:  "plumebot",
+		Email: "hi@plume.chat",
+	}
+	plumeSrv.BotClient = plumeSrv.Room.Enter(botUser)
+
 	r.HandleFunc("/", handleHome)
 	r.PathPrefix("/static/").Handler(http.StripPrefix("/static/", http.FileServer(http.Dir("./static"))))
 	r.HandleFunc("/connect", func(w http.ResponseWriter, r *http.Request) {
 		plumeSrv.Connect(w, r)
 	})
 
+	log.Printf("Plume listening on %s\n", srv.Addr)
 	log.Fatal(srv.ListenAndServe())
 }

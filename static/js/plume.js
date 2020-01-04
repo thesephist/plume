@@ -73,6 +73,7 @@ function connect(name, email) {
 
         hide(enterForm);
         show(verifyForm);
+        verifyForm.querySelector('[name="token"]').focus();
     });
     conn.addEventListener('message', evt => {
         const message = JSON.parse(evt.data);
@@ -93,6 +94,15 @@ function connect(name, email) {
                 hide(verifyForm);
                 show(messageForm);
                 messageForm.querySelector('[name="text"]').focus();
+                // Since currently leaving the page
+                // breaks the WebSocket session and effectively logs
+                // the user out, we ask for confirmation here.
+                window.addEventListener('beforeunload', evt => {
+                    if (noteChanged) {
+                        evt.preventDefault();
+                        evt.returnValue = '';
+                    }
+                });
                 break;
             case TYPE.AuthRst:
                 window.alert('Verification failed: incorrect token');

@@ -1,5 +1,9 @@
 package plume
 
+import (
+	"strings"
+)
+
 type Room struct {
 	Sender chan<- Message
 	// map of usernames to emails
@@ -23,7 +27,7 @@ func (rm *Room) Enter(u User) *Client {
 		Receiver: receiver,
 	}
 
-	rm.verifiedNames[u.Name] = u.Email
+	rm.verifiedNames[strings.ToLower(u.Name)] = u.Email
 	rm.clientReceivers[&client] = receiver
 	go client.StartListening()
 
@@ -34,7 +38,7 @@ func (rm *Room) Enter(u User) *Client {
 // A user may not enter a room if another user with a different email
 // but a matching username is already inside.
 func (rm *Room) CanEnter(u User) bool {
-	existingEmail, prs := rm.verifiedNames[u.Name]
+	existingEmail, prs := rm.verifiedNames[strings.ToLower(u.Name)]
 	if prs {
 		return u.Email == existingEmail
 	} else {
