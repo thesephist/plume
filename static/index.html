@@ -1,0 +1,55 @@
+<head>
+    <title>Plume.chat</title>
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <link rel="stylesheet" href="https://unpkg.com/blocks.css/dist/blocks.min.css" />
+    <link rel="stylesheet" href="/static/css/plume.css" />
+</head>
+
+<body>
+    <form action="POST" id="enterForm" class="plumeForm">
+        <h1>Log in</h1>
+
+        <div class="flexRow left">
+            <label for="login--name">Username</label>
+            <div class="inputWrapper fixed block">
+                <input type="text" name="name" id="login--name" placeholder="linus" autofocus/>
+            </div>
+        </div>
+
+        <div class="flexRow left">
+            <label for="login--email">Email</label>
+            <div class="inputWrapper fixed block">
+                <input type="email" name="email" id="login--email" placeholder="me@example.com" />
+            </div>
+        </div>
+
+        <div class="flexRow right">
+            <div class="submitWrapper block">
+                <input type="submit" value="Enter" />
+            </div>
+        </div>
+    </form>
+
+    <form action="POST" id="messageForm" class="plumeForm">
+        <h1>Messages</h1>
+
+        <div class="messageListWrapper fixed block">
+            <ul class="messageList">
+            </ul>
+        </div>
+
+        <div class="authorBox">
+            <label for="message--text">Message</label>
+            <div class="inputWrapper fixed block authorBoxInput">
+                <input type="text" name="text" id="message--text" placeholder="say something..." />
+            </div>
+            <div class="submitWrapper block">
+                <input type="submit" value="Send" />
+            </div>
+        </div>
+
+    </form>
+
+    <script src="/static/js/plume.js"></script>
+</body>
+

@@ -1,9 +1,10 @@
 package plume
 
 type Client struct {
-	User     User
-	Room     *Room
-	Receiver <-chan Message
+	User      User
+	Room      *Room
+	Receiver  <-chan Message
+	OnMessage func(Message)
 }
 
 func (cl *Client) Send(text string) error {
@@ -33,8 +34,11 @@ func (cl *Client) Leave() error {
 func (cl *Client) StartListening() {
 	for {
 		msg := <-cl.Receiver
-		// TODO: need to determine what API we need to hook into when
-		// a client receives a message
-		fmt.Printf("@%s: %s\n", msg.User.Name, msg.Text)
+
+		if cl.OnMessage == nil {
+			continue
+		}
+
+		cl.OnMessage(msg)
 	}
 }

@@ -1,0 +1,123 @@
+html,
+body {
+    margin: 0;
+    padding: 0;
+    font-size: 18px;
+
+    background: #f8f8f8;
+    font-family: system-ui, sans-serif;
+    --block-accent-color: #454ad6;
+}
+
+input,
+button {
+    font-size: 1rem;
+}
+
+h1 {
+    font-weight: normal;
+    font-size: 1.4em;
+}
+
+form {
+    height: 100vh;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    max-width: 720px;
+    margin: 0 auto;
+}
+
+.flexRow {
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    margin-bottom: 12px;
+    width: 100%;
+    max-width: 360px;
+}
+
+.left {
+    align-items: flex-start;
+}
+
+.right {
+    align-items: flex-end;
+}
+
+label {
+    margin-left: 4px;
+}
+
+label[for="message--text"] {
+    display: none;
+}
+
+input[type="submit"] {
+    -webkit-appearance: none;
+
+    background: var(--block-accent-color);
+    color: var(--block-background-color);
+    border: 2px solid var(--block-accent-color);
+    padding: 8px 12px;
+}
+
+.inputWrapper {
+    padding: 0;
+    width: calc(100% - 12px);
+}
+
+.submitWrapper {
+    padding: 0;
+    display: inline-block;
+    float: right;
+}
+
+input[type="text"],
+input[type="email"] {
+    width: 100%;
+    padding: 8px 12px;
+}
+
+.messageListWrapper {
+    flex-grow: 1;
+    height: 0;
+    padding: 0;
+    width: calc(100% - 12px);
+}
+
+.messageList {
+    box-sizing: border-box;
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    height: 100%;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    font-weight: normal;
+}
+
+.messageItem {
+    padding: 8px 12px;
+    line-height: 1.5em;
+}
+
+.messageItem .user {
+    font-weight: bold;
+    text-decoration: underline;
+}
+
+.authorBox {
+    width: 100%;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.authorBoxInput {
+    flex-grow: 1;
+    width: 0;
+}
