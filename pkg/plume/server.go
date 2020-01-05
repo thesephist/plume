@@ -87,8 +87,8 @@ func (srv *Server) connect(w http.ResponseWriter, r *http.Request) {
 			log.Printf("error: %v", err)
 
 			if client != nil {
-				client.Leave()
 				client.Send("left chat")
+				client.Leave()
 			}
 
 			break
