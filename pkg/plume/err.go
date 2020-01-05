@@ -1,9 +1,11 @@
 package plume
 
-type PlumeError struct {
-	Reason string
+// Error represents any error originating
+// from unexpected states in the Plume server.
+type Error struct {
+	reason string
 }
 
-func (err PlumeError) Error() string {
-	return err.Reason
+func (err Error) Error() string {
+	return err.reason
 }

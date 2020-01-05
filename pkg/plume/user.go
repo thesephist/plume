@@ -10,6 +10,8 @@ import (
 	"github.com/mailgun/mailgun-go/v3"
 )
 
+// User represents a user with the intent to join
+// a Plume chat session
 type User struct {
 	Name  string `json:"name"`
 	Email string `json:"-"`
@@ -19,7 +21,7 @@ const domain = "mail.plume.chat"
 
 var apiKey = os.Getenv("MAILGUN_APIKEY")
 
-func (u User) SendAuthEmail(token string) {
+func (u User) sendAuthEmail(token string) {
 	log.Printf("Sending token for %s: %s", u.Name, token)
 
 	from := "Plume Chat <hi@plume.chat>"
@@ -30,7 +32,7 @@ func (u User) SendAuthEmail(token string) {
 		token,
 	)
 
-	if Environment != "production" {
+	if environment != "production" {
 		log.Printf("Not sending login email as ENV != production")
 		return
 	}

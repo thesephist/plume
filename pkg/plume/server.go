@@ -1,4 +1,4 @@
-// Package Plume provides a tiny WebSocket-based chat server
+// Package plume provides a tiny WebSocket-based chat server
 package plume
 
 import (
@@ -15,7 +15,7 @@ import (
 	"github.com/gorilla/websocket"
 )
 
-var Environment = os.Getenv("ENV")
+var environment = os.Getenv("ENV")
 
 var upgrader = websocket.Upgrader{
 	ReadBufferSize:  1024,
@@ -26,13 +26,14 @@ var upgrader = websocket.Upgrader{
 	},
 }
 
+// Server represents an instance of a Plume chat web server
 type Server struct {
 	Room       *Room
 	BotClient  *Client
 	loginCodes map[string]User
 }
 
-func (srv *Server) GenerateLoginCode(u User) string {
+func (srv *Server) generateLoginCode(u User) string {
 	// XXX: panics if uuid gen fails
 	// take the first 6 bytes of uuid as token
 	token := strings.ToUpper(uuid.New().String()[0:6])
@@ -48,12 +49,12 @@ func (srv *Server) GenerateLoginCode(u User) string {
 	return token
 }
 
-func (srv *Server) AuthUser(token string) (User, bool) {
+func (srv *Server) authUser(token string) (User, bool) {
 	user, prs := srv.loginCodes[strings.ToUpper(token)]
 	return user, prs
 }
 
-func (srv *Server) Connect(w http.ResponseWriter, r *http.Request) {
+func (srv *Server) connect(w http.ResponseWriter, r *http.Request) {
 	conn, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
 		log.Println(err)
@@ -94,7 +95,7 @@ func (srv *Server) Connect(w http.ResponseWriter, r *http.Request) {
 		}
 
 		switch msg.Type {
-		case MsgHello:
+		case msgHello:
 			textParts := strings.Split(msg.Text, "\n")
 			if len(textParts) != 2 {
 				// malformed hello message
@@ -106,19 +107,19 @@ func (srv *Server) Connect(w http.ResponseWriter, r *http.Request) {
 				Email: textParts[1],
 			}
 			if srv.Room.CanEnter(u) {
-				u.SendAuthEmail(srv.GenerateLoginCode(u))
+				u.sendAuthEmail(srv.generateLoginCode(u))
 			} else {
 				conn.WriteJSON(Message{
-					Type: MsgMayNotEnter,
+					Type: msgMayNotEnter,
 					User: u,
 				})
 			}
-		case MsgAuth:
+		case msgAuth:
 			token := msg.Text
-			u, prs := srv.AuthUser(token)
+			u, prs := srv.authUser(token)
 			if !prs {
 				conn.WriteJSON(Message{
-					Type: MsgAuthRst,
+					Type: msgAuthRst,
 					User: u,
 				})
 				break
@@ -130,25 +131,25 @@ func (srv *Server) Connect(w http.ResponseWriter, r *http.Request) {
 			}
 
 			conn.WriteJSON(Message{
-				Type: MsgAuthAck,
+				Type: msgAuthAck,
 				User: u,
 			})
 
 			log.Printf("@%s entered with email %s", u.Name, u.Email)
 
 			conn.WriteJSON(Message{
-				Type: MsgText,
+				Type: msgText,
 				User: srv.BotClient.User,
 				Text: fmt.Sprintf("Hi @%s! Welcome to Plume.chat. You can read more about this project at github.com/thesephist/plume.", u.Name),
 			})
 			conn.WriteJSON(Message{
-				Type: MsgText,
+				Type: msgText,
 				User: srv.BotClient.User,
 				Text: fmt.Sprintf("Please be kind in the chat, and remember that your email (%s) is tied to what you say here. Happy chatting!", u.Email),
 			})
 
 			client.Send("entered chat")
-		case MsgText:
+		case msgText:
 			if client == nil {
 				break
 			}
@@ -172,6 +173,8 @@ func handleHome(w http.ResponseWriter, r *http.Request) {
 	io.Copy(w, indexFile)
 }
 
+// StartServer starts a Plume web server and listens
+// for new clients.
 func StartServer() {
 	r := mux.NewRouter()
 
@@ -196,7 +199,7 @@ func StartServer() {
 	r.HandleFunc("/", handleHome)
 	r.PathPrefix("/static/").Handler(http.StripPrefix("/static/", http.FileServer(http.Dir("./static"))))
 	r.HandleFunc("/connect", func(w http.ResponseWriter, r *http.Request) {
-		plumeSrv.Connect(w, r)
+		plumeSrv.connect(w, r)
 	})
 
 	log.Printf("Plume listening on %s\n", srv.Addr)
