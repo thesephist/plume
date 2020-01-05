@@ -15,6 +15,8 @@ import (
 	"github.com/gorilla/websocket"
 )
 
+const maxTextLen = 65536
+
 var environment = os.Getenv("ENV")
 
 var upgrader = websocket.Upgrader{
@@ -163,6 +165,9 @@ func (srv *Server) connect(w http.ResponseWriter, r *http.Request) {
 				break
 			}
 
+			if len(msg.Text) > maxTextLen {
+				msg.Text = msg.Text[0:maxTextLen]
+			}
 			client.Send(msg.Text)
 		default:
 			log.Printf("unknown message type: %v", msg)
