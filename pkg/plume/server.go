@@ -13,6 +13,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/gorilla/mux"
 	"github.com/gorilla/websocket"
+	"golang.org/x/time/rate"
 )
 
 const maxTextLen = 65536
@@ -83,6 +84,8 @@ func (srv *Server) connect(w http.ResponseWriter, r *http.Request) {
 		}
 	}()
 
+	// max 10 per second, 1 message at once
+	messageLimiter := rate.NewLimiter(10, 1)
 	for {
 		var msg Message
 
@@ -162,6 +165,10 @@ func (srv *Server) connect(w http.ResponseWriter, r *http.Request) {
 			client.Send("entered chat")
 		case msgText:
 			if client == nil {
+				break
+			}
+
+			if !messageLimiter.Allow() {
 				break
 			}
 
