@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/mailgun/mailgun-go/v3"
+	"golang.org/x/time/rate"
 )
 
 // User represents a user with the intent to join
@@ -21,7 +22,15 @@ const domain = "mail.plume.chat"
 
 var apiKey = os.Getenv("MAILGUN_APIKEY")
 
+// 1 every 4 seconds, max 1 call at once
+var mailLimiter = rate.NewLimiter(0.25, 1)
+
 func (u User) sendAuthEmail(token string) {
+	if !mailLimiter.Allow() {
+		log.Printf("Mail send rate limit exceeded by %s\n", u.Email)
+		return
+	}
+
 	log.Printf("Sending token for %s: %s", u.Name, token)
 
 	from := "Plume Chat <hi@plume.chat>"
@@ -33,7 +42,7 @@ func (u User) sendAuthEmail(token string) {
 	)
 
 	if environment != "production" {
-		log.Printf("Not sending login email as ENV != production")
+		log.Printf("Not sending login email as ENV != production\n")
 		return
 	}
 
