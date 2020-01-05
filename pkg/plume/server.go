@@ -108,6 +108,13 @@ func (srv *Server) connect(w http.ResponseWriter, r *http.Request) {
 				Name:  textParts[0],
 				Email: textParts[1],
 			}
+
+			// Prevent abuses of the name and email fields
+			// by blocking overly long values
+			if len(u.Name) > 120 || len(u.Email) > 120 {
+				break
+			}
+
 			if srv.Room.CanEnter(u) {
 				u.sendAuthEmail(srv.generateLoginCode(u))
 			} else {
