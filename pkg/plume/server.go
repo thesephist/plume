@@ -73,7 +73,9 @@ func (srv *Server) connect(w http.ResponseWriter, r *http.Request) {
 			if err := conn.WriteMessage(websocket.PingMessage, nil); err != nil {
 				// XXX: may be racey here against client.Leave() below
 				// in response to failed WebSocket read.
-				client.Leave()
+				if client != nil {
+					client.Leave()
+				}
 				return
 			}
 		}
