@@ -61,6 +61,8 @@ func (srv *Server) Connect(w http.ResponseWriter, r *http.Request) {
 	}
 	defer conn.Close()
 
+	var client *Client
+
 	// keep-alive ping-pong messages
 	go func() {
 		for {
@@ -68,12 +70,14 @@ func (srv *Server) Connect(w http.ResponseWriter, r *http.Request) {
 			time.Sleep(50 * time.Second)
 
 			if err := conn.WriteMessage(websocket.PingMessage, nil); err != nil {
+				// XXX: may be racey here against client.Leave() below
+				// in response to failed WebSocket read.
+				client.Leave()
 				return
 			}
 		}
 	}()
 
-	var client *Client
 	for {
 		var msg Message
 
@@ -82,6 +86,7 @@ func (srv *Server) Connect(w http.ResponseWriter, r *http.Request) {
 			log.Printf("error: %v", err)
 
 			if client != nil {
+				client.Leave()
 				client.Send("left chat")
 			}
 

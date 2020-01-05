@@ -11,7 +11,7 @@ const (
 	MsgMayNotEnter
 
 	// In the future, we can support things like presence
-	// by using additioal codes liek MsgTypingStart/Stop
+	// by using additional codes like MsgTypingStart/Stop
 )
 
 type Message struct {
