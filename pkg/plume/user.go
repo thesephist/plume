@@ -34,9 +34,10 @@ func (u User) sendAuthEmail(token string) {
 	log.Printf("Sending token for %s: %s", u.Name, token)
 
 	from := "Plume Chat <hi@plume.chat>"
-	subject := "Your Plume login code"
-	body := fmt.Sprintf(
-		"Hi @%s! Your login code to Plume.chat is \"%s\".",
+	subject := fmt.Sprintf("Your Plume login code: %s", token)
+	body := fmt.Sprintf(`<p>Hi @%s!</p>
+<p>Your login code to Plume.chat is...</p>
+<pre style="text-align:center;background-color:#ebebeb;padding:8px 0;font-size:1.5em;border-radius:4px"><b>%s</b></pre>`,
 		u.Name,
 		token,
 	)
@@ -50,9 +51,10 @@ func (u User) sendAuthEmail(token string) {
 	mail := mg.NewMessage(
 		from,
 		subject,
-		body,
+		"",
 		u.Email, // recipient
 	)
+	mail.SetHtml(body)
 
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*15)
 	defer cancel()
